@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: neuroops-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7
+    container_name: neuroops-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: neuroops-ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  gateway-service:
+    build: ./services/gateway-service
+    container_name: neuroops-gateway
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - SERVICE_NAME=gateway-service
+      - MONGO_URI=mongodb://mongodb:27017/neuroops
+      - REDIS_HOST=redis
+
+  github-service:
+    build: ./services/github-service
+    container_name: neuroops-github
+    ports:
+      - "5001:5001"
+    depends_on:
+      - redis
+    environment:
+      - SERVICE_NAME=github-service
+      - REDIS_HOST=redis
+
+  worker-service:
+    build: ./services/worker-service
+    container_name: neuroops-worker
+    ports:
+      - "5003:5003"
+    depends_on:
+      - redis
+      - mongodb
+      - ollama
+    environment:
+      - SERVICE_NAME=worker-service
+      - REDIS_HOST=redis
+      - MONGO_URI=mongodb://mongodb:27017/neuroops
+      - OLLAMA_URL=http://ollama:11434
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+
+  ai-service:
+    build: ./services/ai-service
+    container_name: neuroops-ai
+    ports:
+      - "5002:5002"
+    depends_on:
+      - ollama
+    environment:
+      - SERVICE_NAME=ai-service
+      - OLLAMA_URL=http://ollama:11434
+
+volumes:
+  mongo_data:
+  ollama_data:
