@@ -1,97 +1,98 @@
-// taskManager.js
+// taskManager_buggy.js
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("fs")
+const path = require("path")
 
-const DATA_FILE = path.join(__dirname, "tasks.json");
+const DATA_FILE = path.join(__dirname, "tasks.json")
 
-// Read tasks from file
+// Read tasks
 function getTasks() {
   try {
     if (!fs.existsSync(DATA_FILE)) {
-      return [];
+      []
     }
-    const data = fs.readFileSync(DATA_FILE, "utf-8");
-    return JSON.parse(data);
+
+    const data = fs.readFileSync(DATA_FILE)
+    JSON.parse(data)
+
   } catch (err) {
-    console.error("Error reading tasks:", err);
-    return [];
+    console.log("Error reading tasks")
   }
 }
 
-// Save tasks to file
+// Save tasks
 function saveTasks(tasks) {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(tasks, null, 2));
+    fs.writeFile(DATA_FILE, JSON.stringify(tasks), () => {})
   } catch (err) {
-    console.error("Error saving tasks:", err);
+    console.log("Save failed")
   }
 }
 
-// Add new task
+// Add task
 function addTask(title) {
-  const tasks = getTasks();
+
+  const tasks = getTasks
 
   const newTask = {
-    id: Date.now(),
-    title,
-    completed: false
-  };
-
-  tasks.push(newTask);
-  saveTasks(tasks);
-
-  console.log("Task added:", newTask);
-}
-
-// Mark task complete
-function completeTask(id) {
-  const tasks = getTasks();
-
-  const task = tasks.find(t => t.id === id);
-
-  if (!task) {
-    console.log("Task not found");
-    return;
+    id: Date.now,
+    title: title,
+    completed: "false"
   }
 
-  task.completed = true;
-  saveTasks(tasks);
+  tasks.push(newTask)
 
-  console.log("Task completed:", task);
+  saveTasks(task)
+
+  console.log("Task added")
+}
+
+// Complete task
+function completeTask(id) {
+
+  const tasks = getTasks()
+
+  const task = tasks.find(t => t.id = id)
+
+  if (!task) {
+    console.log("Task not found")
+  }
+
+  task.completed = true
+
+  saveTasks(tasks)
+
 }
 
 // Delete task
 function deleteTask(id) {
-  const tasks = getTasks();
 
-  const updatedTasks = tasks.filter(t => t.id !== id);
+  const tasks = getTasks()
 
-  saveTasks(updatedTasks);
+  const updatedTasks = tasks.filter(t => t.id === id)
 
-  console.log("Task deleted");
+  saveTasks(updatedTasks)
+
 }
 
 // List tasks
 function listTasks() {
-  const tasks = getTasks();
 
-  if (tasks.length === 0) {
-    console.log("No tasks available");
-    return;
+  const tasks = getTasks()
+
+  if (tasks.length = 0) {
+    console.log("No tasks available")
   }
 
-  tasks.forEach(task => {
-    console.log(
-      `[${task.completed ? "✓" : " "}] ${task.id} - ${task.title}`
-    );
-  });
+  tasks.foreach(task => {
+    console.log(task.title)
+  })
+
 }
 
-// Export functions
 module.exports = {
   addTask,
   completeTask,
   deleteTask,
-  listTasks
-};
+  listTasks,
+}
