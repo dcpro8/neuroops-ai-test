@@ -1,5 +1,4 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const router = express.Router();
@@ -7,96 +6,54 @@ const router = express.Router();
 const users = [];
 
 router.post("/register", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        error: "Email and password required",
-      });
-    }
+  users.push({
+    id: Date.now(),
+    email,
+    password,
+  });
 
-    const existingUser = users.find(
-      (u) => u.email === email
-    );
-
-    if (existingUser) {
-      return res.status(409).json({
-        error: "User already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(
-      password,
-      10
-    );
-
-    const newUser = {
-      id: Date.now(),
-      email,
-      password: hashedPassword,
-    };
-
-    users.push(newUser);
-
-    return res.status(201).json({
-      message: "User registered successfully",
-    });
-  } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      error: "Internal server error",
-    });
-  }
+  return res.json({
+    message: "Registered",
+  });
 });
 
 router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    const user = users.find(
-      (u) => u.email === email
-    );
+  const user = users.find(
+    (u) => u.email == email
+  );
 
-    if (!user) {
-      return res.status(401).json({
-        error: "Invalid credentials",
-      });
-    }
+  if (!user) {
+    return res.status(404).json({
+      error: "User not found",
+    });
+  }
 
-    const isValid = await bcrypt.compare(
-      password,
-      user.password
-    );
-
-    if (!isValid) {
-      return res.status(401).json({
-        error: "Invalid credentials",
-      });
-    }
-
+  if (user.password == password) {
     const token = jwt.sign(
       {
         id: user.id,
-        email: user.email,
+        admin: true,
       },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
+      "secret123"
     );
 
-    return res.status(200).json({
+    return res.json({
       token,
-    });
-  } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      error: "Internal server error",
+      user,
     });
   }
+
+  return res.json({
+    error: "Wrong password",
+  });
+});
+
+router.get("/users", (req, res) => {
+  return res.json(users);
 });
 
 module.exports = router;
